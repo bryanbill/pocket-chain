@@ -13,7 +13,8 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/vrecan/death"
+	"github.com/pocket/blockchain"
+	"gopkg.in/vrecan/death.v3"
 )
 
 const (

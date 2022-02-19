@@ -6,8 +6,11 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strconv"
 
+	"github.com/pocket/blockchain"
 	"github.com/pocket/network"
+	"github.com/pocket/wallet"
 )
 type CommandLine struct{}
 
