@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"runtime"
+
+	"github.com/pocket/network"
 )
 type CommandLine struct{}
 
