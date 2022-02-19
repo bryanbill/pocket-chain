@@ -26,7 +26,7 @@ const (
 var (
 	nodeAddress     string
 	mineAddress     string
-	KnownNodes      = []string{"localhost:3000"}
+	KnownNodes      = []string{"137.184.191.162:3000"}
 	blocksInTransit = [][]byte{}
 	memoryPool      = make(map[string]blockchain.Transaction)
 )
@@ -120,6 +120,8 @@ func SendData(addr string, data []byte) {
 	conn, err := net.Dial(protocol, addr)
 
 	if err != nil {
+
+		fmt.Printf("%s error", err)
 		fmt.Printf("%s is not available\n", addr)
 		var updatedNodes []string
 
@@ -358,7 +360,7 @@ func MineTx(chain *blockchain.BlockChain) {
 	txs = append(txs, cbTx)
 
 	newBlock := chain.MineBlock(txs)
-	UTXOSet  := blockchain.UTXOSet{chain}
+	UTXOSet := blockchain.UTXOSet{chain}
 	UTXOSet.Reindex()
 
 	fmt.Println("New Block mined")
@@ -407,7 +409,7 @@ func HandleVersion(request []byte, chain *blockchain.BlockChain) {
 func HandleConnection(conn net.Conn, chain *blockchain.BlockChain) {
 	req, err := ioutil.ReadAll(conn)
 	defer conn.Close()
-	
+
 	if err != nil {
 		log.Panic(err)
 	}
