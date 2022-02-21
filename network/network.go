@@ -4,15 +4,17 @@ import (
 	"bytes"
 	"encoding/gob"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"runtime"
 	"syscall"
-
+	"github.com/joho/godotenv"
 	"github.com/pocket/blockchain"
 	"gopkg.in/vrecan/death.v3"
 )
@@ -66,7 +68,27 @@ type Version struct {
 	BestHeight int
 	AddrFrom   string
 }
+type IP struct {
+	Query string
+}
 
+func getip2() string {
+	req, err := http.Get("http://ip-api.com/json/")
+	if err != nil {
+		return err.Error()
+	}
+	defer req.Body.Close()
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return err.Error()
+	}
+
+	var ip IP
+	json.Unmarshal(body, &ip)
+
+	return ip.Query
+}
 func CmdToBytes(cmd string) []byte {
 	var bytes [commandLength]byte
 
@@ -121,7 +143,7 @@ func SendData(addr string, data []byte) {
 
 	if err != nil {
 
-		fmt.Printf("%s error", err)
+		fmt.Printf("%s error\n", err)
 		fmt.Printf("%s is not available\n", addr)
 		var updatedNodes []string
 
@@ -394,11 +416,19 @@ func HandleVersion(request []byte, chain *blockchain.BlockChain) {
 
 	bestHeight := chain.GetBestHeight()
 	otherHeight := payload.BestHeight
+	envErr := godotenv.Load("../.env")
 
+	if envErr != nil {
+		log.Fatal(envErr)
+
+	}
+	var addr = os.Getenv(("TCP_ADDR"))
+	fmt.Printf("Address From : %s\n", addr)
 	if bestHeight < otherHeight {
-		SendGetBlocks(payload.AddrFrom)
+
+		SendGetBlocks(addr)
 	} else if bestHeight > otherHeight {
-		SendVersion(payload.AddrFrom, chain)
+		SendVersion(addr, chain)
 	}
 
 	if !NodeIsKnown(payload.AddrFrom) {
@@ -407,6 +437,7 @@ func HandleVersion(request []byte, chain *blockchain.BlockChain) {
 }
 
 func HandleConnection(conn net.Conn, chain *blockchain.BlockChain) {
+
 	req, err := ioutil.ReadAll(conn)
 	defer conn.Close()
 
@@ -438,10 +469,11 @@ func HandleConnection(conn net.Conn, chain *blockchain.BlockChain) {
 }
 
 func StartServer(nodeID, minerAddress string) {
-	nodeAddress = fmt.Sprintf("localhost:%s", nodeID)
+	nodeAddress = fmt.Sprintf("[::]:%s", nodeID)
 	mineAddress = minerAddress
 	ln, err := net.Listen(protocol, nodeAddress)
 	if err != nil {
+
 		log.Panic(err)
 	}
 	defer ln.Close()
@@ -456,8 +488,10 @@ func StartServer(nodeID, minerAddress string) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
+			// fmt.Print("Here Error")
 			log.Panic(err)
 		}
+
 		go HandleConnection(conn, chain)
 
 	}
