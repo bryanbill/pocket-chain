@@ -416,7 +416,7 @@ func HandleVersion(request []byte, chain *blockchain.BlockChain) {
 
 	bestHeight := chain.GetBestHeight()
 	otherHeight := payload.BestHeight
-	envErr := godotenv.Load("../.env")
+	envErr := godotenv.Load("loading.env")
 
 	if envErr != nil {
 		log.Fatal(envErr)
